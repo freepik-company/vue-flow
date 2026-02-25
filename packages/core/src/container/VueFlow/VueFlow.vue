@@ -16,6 +16,8 @@ import { useStylesLoadedWarning } from '../../composables/useStylesLoadedWarning
 const props = withDefaults(defineProps<FlowProps>(), {
   snapToGrid: undefined,
   onlyRenderVisibleElements: undefined,
+  visibilityBuffer: undefined,
+  visibilityUpdateFrequency: undefined,
   edgesUpdatable: undefined,
   nodesConnectable: undefined,
   nodesDraggable: undefined,

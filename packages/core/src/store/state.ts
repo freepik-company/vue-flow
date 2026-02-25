@@ -51,6 +51,8 @@ export function useState(): State {
     panOnDrag: true,
     edgeUpdaterRadius: 10,
     onlyRenderVisibleElements: false,
+    visibilityBuffer: 0,
+    visibilityUpdateFrequency: 0,
     defaultViewport: { x: 0, y: 0, zoom: 1 },
 
     nodesSelectionActive: false,

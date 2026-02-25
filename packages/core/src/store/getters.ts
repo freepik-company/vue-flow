@@ -1,6 +1,7 @@
 import type { ComputedRef } from 'vue'
-import { computed } from 'vue'
+import { computed, shallowRef, watch } from 'vue'
 import type { ComputedGetters, EdgeLookup, GraphEdge, GraphNode, NodeLookup, State } from '../types'
+import type { ViewportTransform } from '../types/zoom'
 import { getNodesInside, isEdgeVisible } from '../utils'
 import { defaultEdgeTypes, defaultNodeTypes } from '../utils/defaultNodesEdges'
 
@@ -49,17 +50,52 @@ export function useGetters(
     return nodeTypes
   })
 
+  // Throttled viewport for visibility culling — decouples CSS transform (60fps) from expensive
+  // getNodesInside/isEdgeVisible recalculations (throttled to visibilityUpdateFrequency)
+  const _cullingViewport = shallowRef<ViewportTransform>({ x: 0, y: 0, zoom: 1 })
+  let _cullingLastUpdate = 0
+  let _cullingTimer: ReturnType<typeof setTimeout> | null = null
+
+  watch(
+    () => state.viewport,
+    (vp) => {
+      const freq = state.visibilityUpdateFrequency
+      if (!freq) {
+        _cullingViewport.value = vp
+        return
+      }
+      const now = performance.now()
+      const elapsed = now - _cullingLastUpdate
+      if (elapsed >= freq) {
+        _cullingLastUpdate = now
+        _cullingViewport.value = vp
+        if (_cullingTimer) {
+          clearTimeout(_cullingTimer)
+          _cullingTimer = null
+        }
+      } else if (!_cullingTimer) {
+        _cullingTimer = setTimeout(() => {
+          _cullingTimer = null
+          _cullingLastUpdate = performance.now()
+          _cullingViewport.value = state.viewport
+        }, freq - elapsed)
+      }
+    },
+    { deep: true, immediate: true },
+  )
+
   const getNodes: ComputedGetters['getNodes'] = computed(() => {
     if (state.onlyRenderVisibleElements) {
+      const buffer = state.visibilityBuffer || 0
       return getNodesInside(
         state.nodes,
         {
-          x: 0,
-          y: 0,
-          width: state.dimensions.width,
-          height: state.dimensions.height,
+          x: -buffer,
+          y: -buffer,
+          width: state.dimensions.width + buffer * 2,
+          height: state.dimensions.height + buffer * 2,
         },
-        state.viewport,
+        _cullingViewport.value,
         true,
       )
     }
@@ -69,6 +105,7 @@ export function useGetters(
 
   const getEdges: ComputedGetters['getEdges'] = computed(() => {
     if (state.onlyRenderVisibleElements) {
+      const buffer = state.visibilityBuffer || 0
       const visibleEdges: GraphEdge[] = []
 
       for (const edge of state.edges) {
@@ -83,9 +120,9 @@ export function useGetters(
             sourceHeight: source.dimensions.height,
             targetWidth: target.dimensions.width,
             targetHeight: target.dimensions.height,
-            width: state.dimensions.width,
-            height: state.dimensions.height,
-            viewport: state.viewport,
+            width: state.dimensions.width + buffer * 2,
+            height: state.dimensions.height + buffer * 2,
+            viewport: _cullingViewport.value,
           })
         ) {
           visibleEdges.push(edge)

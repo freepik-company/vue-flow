@@ -79,6 +79,10 @@ export interface State extends Omit<FlowProps, 'id' | 'modelValue'> {
   readonly viewport: ViewportTransform
   /** if true will skip rendering any elements currently not inside viewport until they become visible */
   onlyRenderVisibleElements: boolean
+  /** px padding around viewport to pre-render off-screen nodes (avoids pop-in during scroll) */
+  visibilityBuffer: number
+  /** ms between visibility recalculations when onlyRenderVisibleElements is true (0 = every frame) */
+  visibilityUpdateFrequency: number
   nodesSelectionActive: boolean
   userSelectionActive: boolean
   multiSelectionActive: boolean

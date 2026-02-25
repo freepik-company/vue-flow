@@ -171,6 +171,10 @@ export interface FlowProps {
   snapToGrid?: boolean
   snapGrid?: SnapGrid
   onlyRenderVisibleElements?: boolean
+  /** px padding around viewport to pre-render off-screen nodes (avoids pop-in during scroll) */
+  visibilityBuffer?: number
+  /** ms between visibility recalculations when onlyRenderVisibleElements is true (0 = every frame) */
+  visibilityUpdateFrequency?: number
   edgesUpdatable?: EdgeUpdatable
   nodesDraggable?: boolean
   nodesConnectable?: boolean
