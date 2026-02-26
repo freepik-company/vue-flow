@@ -28,8 +28,8 @@ import { isDef, isMacOs, snapPosition, warn } from '.'
 export function nodeToRect(node: GraphNode): Rect {
   return {
     ...(node.computedPosition || { x: 0, y: 0 }),
-    width: node.dimensions.width || 0,
-    height: node.dimensions.height || 0,
+    width: node.dimensions.width || node.width || 0,
+    height: node.dimensions.height || node.height || 0,
   }
 }
 
@@ -383,8 +383,8 @@ export function getNodesInside(
 
   for (const node of nodes) {
     const { dimensions, selectable = true, hidden = false } = node
-    const width = dimensions.width ?? node.width ?? null
-    const height = dimensions.height ?? node.height ?? null
+    const width = dimensions.width || node.width || null
+    const height = dimensions.height || node.height || null
 
     if ((excludeNonSelectableNodes && !selectable) || hidden) {
       continue
