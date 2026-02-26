@@ -1,4 +1,4 @@
-import { unref } from 'vue'
+import { markRaw, unref } from 'vue'
 import type {
   Actions,
   Connection,
@@ -121,6 +121,16 @@ export function createGraphNodes(nodes: Node[], findNode: Actions['findNode'], t
       if (parentNode) {
         parentNode.isParent = true
       }
+    }
+
+    // Set absolute computedPosition for child nodes so visibility culling
+    // works correctly before NodeWrapper mounts and recalculates it
+    if (node.parentNode && parentNode?.computedPosition) {
+      node.computedPosition = markRaw({
+        x: parentNode.computedPosition.x + node.position.x,
+        y: parentNode.computedPosition.y + node.position.y,
+        z: Math.max(parentNode.computedPosition.z ?? 0, node.computedPosition.z ?? 0) + 1,
+      })
     }
   }
 

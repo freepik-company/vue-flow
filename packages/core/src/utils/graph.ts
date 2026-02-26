@@ -390,7 +390,8 @@ export function getNodesInside(
       continue
     }
 
-    const overlappingArea = getOverlappingArea(paneRect, nodeToRect(node))
+    const rect = nodeToRect(node)
+    const overlappingArea = getOverlappingArea(paneRect, rect)
     const notInitialized = width === null || height === null
 
     const partiallyVisible = partially && overlappingArea > 0
